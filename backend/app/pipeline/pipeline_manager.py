@@ -1,5 +1,7 @@
 from app.services.audio_analyzer import detect_beats
 from app.services.video_analyzer import analyze_video
+from app.services.editing_engine import generate_edit_plan
+from app.renderer.video_renderer import render_video
 
 
 def run_pipeline(video_paths, music_path):
@@ -17,11 +19,17 @@ def run_pipeline(video_paths, music_path):
     print("Video Analysis", video_data)
 
     print("Step 3: Editing Analysis")
+    edit_plan = generate_edit_plan(video_data, audio_data["beats"])
+
+    print("Edit Plan:", edit_plan[:5])
+
     print("Step 4: Rendering")
+    output_path = render_video(edit_plan)
 
     return {
         "tempo": audio_data["tempo"],
         "beats": audio_data["beats"],
         "video_analysis": video_data,
-        "output": "storage/outputs/reel.mp4",
+        "edit_plan": edit_plan,
+        "output": output_path,
     }

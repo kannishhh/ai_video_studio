@@ -20,6 +20,7 @@ async def generate_reel(
         "status": "processing",
         "tempo": output["tempo"],
         "beats_sample": output["beats"][:10],
+        "edit_plan_sample": output["edit_plan"][:10],
         "video_analysis": output["video_analysis"],
         "output": output["output"],
     }
