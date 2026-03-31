@@ -7,6 +7,6 @@ def analyze_video(video_paths):
     for path in video_paths:
         faces = detect_faces(path)
 
-        results.append({"video": path, "face_frames": faces[:10]})
+        results.append({"video": path, "faces": faces[:10]})
 
     return results

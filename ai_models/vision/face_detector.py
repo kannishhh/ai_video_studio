@@ -8,7 +8,7 @@ face_detection = mp_face.FaceDetection(model_selection=0, min_detection_confiden
 def detect_faces(video_path: str):
     cap = cv2.VideoCapture(video_path)
 
-    face_frames = []
+    face_data = []
     frame_count = 0
 
     while cap.isOpened():
@@ -18,13 +18,22 @@ def detect_faces(video_path: str):
 
         frame_count += 1
 
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        results = face_detection.process(rgb_frame)
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = face_detection.process(rgb)
 
         if results.detections:
-            face_frames.append(frame_count)
+            for det in results.detections:
+                bbox = det.location_data.relative_bounding_box
+
+                face_data.append(
+                    {
+                        "frame": frame_count,
+                        "x": bbox.xmin,
+                        "y": bbox.ymin,
+                        "w": bbox.width,
+                        "h": bbox.height,
+                    }
+                )
 
     cap.release()
-
-    return face_frames
+    return face_data
