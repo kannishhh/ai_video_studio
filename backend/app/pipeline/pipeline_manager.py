@@ -26,6 +26,8 @@ def run_pipeline(video_paths, music_path):
     print("Step 4: Rendering")
     output_path = render_video(edit_plan)
 
+    print(f"Video generated at: {output_path}")
+
     return {
         "tempo": audio_data["tempo"],
         "beats": audio_data["beats"],

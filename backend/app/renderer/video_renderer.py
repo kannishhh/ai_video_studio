@@ -1,19 +1,23 @@
 import cv2
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy.editor import VideoFileClip, concatenate_videoclips, vfx
 
 
 def render_video(edit_plan, output_path="storage/outputs/reel.mp4"):
     clips = []
 
-    for item in edit_plan[:3]:
+    for i, item in enumerate(edit_plan[:3]):
         video_path = item["video"]
 
-        start = float(item["start"])
-        end = float(item["end"])
+        clip_obj = VideoFileClip(video_path)
 
-        clip = VideoFileClip(video_path).subclip(start, end)
+        video_duration = clip_obj.duration
+        start = 0
+        end = min(1.5, video_duration)
 
-        clip = clip.fx(lambda c: c.speedx(1.05))
+        clip = clip_obj.subclip(start, end).without_audio()
+
+        clip = clip.fx(vfx.speedx, factor=1.05)
+        clip = clip.fx(vfx.colorx, factor=1.1)
         clip = clip.fadein(0.2).fadeout(0.2)
 
         video_faces = item.get("faces", [])
@@ -21,9 +25,17 @@ def render_video(edit_plan, output_path="storage/outputs/reel.mp4"):
         if item["effect"] == "zoom":
             clip = apply_face_zoom(clip, video_faces)
 
+        if i != 0:
+            clip = clip.crossfadein(0.2)
+
+        if i % 2 == 0:
+            clip = apply_effects(clip, "flash")
+        else:
+            clip = apply_effects(clip, "normal")
+
         clips.append(clip)
 
-    final = concatenate_videoclips(clips, method="compose")
+    final = concatenate_videoclips(clips, method="compose", padding=-0.2)
 
     final.write_videofile(output_path, fps=10, preset="ultrafast", threads=2)
 
@@ -36,15 +48,13 @@ def apply_face_zoom(clip, faces):
     if not faces:
         return clip
 
-    # face = faces[0]
-
     centers = []
 
     for f in faces:
         fx = int(f["x"] * w)
         fy = int(f["y"] * h)
         fw = int(f["w"] * w)
-        fh = int(f["h"] * w)
+        fh = int(f["h"] * h)
 
         cx = fx + fw // 2
         cy = fy + fh // 2
@@ -58,6 +68,7 @@ def apply_face_zoom(clip, faces):
         frame = get_frame(t)
 
         idx = int((t / clip.duration) * (len(centers) - 1))
+        idx = min(idx, len(centers) - 1)
         if idx > 0:
             prev_cx, prev_cy = centers[idx - 1]
             cx = int(0.7 * prev_cx + 0.3 * centers[idx][0])
@@ -76,3 +87,13 @@ def apply_face_zoom(clip, faces):
         return cv2.resize(cropped, (w, h))
 
     return clip.fl(zoom_func)
+
+
+def apply_effects(clip, effect_type):
+    if effect_type == "flash":
+        return clip.fx(vfx.lum_contrast, lum=0, contrast=0, contrast_thr=0)
+
+    elif effect_type == "slow":
+        return clip.fx(vfx.speedx, factor=0.4)
+
+    return clip

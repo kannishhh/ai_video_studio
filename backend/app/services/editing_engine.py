@@ -1,10 +1,13 @@
 def generate_edit_plan(video_data, beats):
     plan = []
 
-    videos_with_faces = [v for v in video_data if v["faces"]]
-    videos_without_faces = [v for v in video_data if not v["faces"]]
+    def score(video):
+        score = 0
+        if video["faces"]:
+            score += 5
+        return score
 
-    all_videos = videos_with_faces + videos_without_faces
+    sorted_videos = sorted(video_data, key=score, reverse=True)
 
     video_index = 0
 
@@ -12,7 +15,7 @@ def generate_edit_plan(video_data, beats):
         start = beats[i]
         end = beats[i + 1]
 
-        video = all_videos[video_index % len(all_videos)]
+        video = sorted_videos[video_index % len(sorted_videos)]
 
         effect = "zoom" if video["faces"] else "normal"
 
